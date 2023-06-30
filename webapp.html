@@ -29,7 +29,7 @@
             {
                 display: flex;
                 flex-direction: column;
-                height: 65%;
+                height: 70%;
             }
             .values
             {
@@ -57,12 +57,12 @@
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
             integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
             crossorigin=""/>
-        <title>Scootek Data Provider</title>
+        <title>Scooteq Data Provider</title>
     </head>
     <body>
         <nav class="navbar navbar-expand-lg navbar-dark darker-bg", id="nbar">
             <div class="container">
-                <a class="navbar-brand" href="#">Scootek</a>
+                <a class="navbar-brand" href="#">Scooteq</a>
             </div>
         </nav>
         
@@ -73,19 +73,22 @@
                     <div class="col">
                         <div class="values-container">
                             <div class="row values">
-                                <i id="_scooterid">Selected Scooter = 253</i>
+                                <i id="_scooterid">Selected Scooter = </i>
                             </div>
                             <div class="row values">
-                                <i id="_scooterbattery">Remaining Battery = 100%</i>
+                                <i id="_scooterbattery">Remaining Battery = </i>
                             </div>
                             <div class="row values">
-                                <i id="_targetdist">Distance = 12.3km</i>
+                                <i id="_targetdist">Distance = </i>
                             </div>
                             <div class="row values">
-                                <i id="_batteryremaining">Battery after = 75%</i>
+                                <i id="_batteryafter">Battery after = </i>
                             </div>
                             <div class="row values">
-                                <i id="_cost">Cost= 22.25€</i>
+                                <i id="_cost">Cost = </i>
+                            </div>
+                            <div class="row values">
+                                <i id="_message"></i>
                             </div>
                         </div>
                     </div>
@@ -96,7 +99,7 @@
                     </div>
                 </div>
                 <div class="row mt-3">
-                        <button type="button", class="btn btn-light h-25">Rent now!</button>
+                        <button type="button", class="btn btn-primary h-25", id="rent_button">Rent now!</button>
                 </div>
             </div>
         </main>
@@ -104,7 +107,7 @@
         <footer class="darker-bg">
             <!-- Footer content -->
             <div class="container text-center">
-                <span>&copy; 2023 Scootek GmbH. All rights reserved.</span>
+                <span>&copy; 2023 Scooteq GmbH. All rights reserved.</span>
             </div>
         </footer>
 
@@ -115,11 +118,25 @@
         <script>
             var map = L.map('map').setView([53.55, 10.0], 13);
             var popup_marker = null;
+            
             var selected_scooter = null;
+            var selected_scooter_latlong = null;
             var selected_scooter_id = null;
             var selected_scooter_battery = null;
+
+            var target_latlong = null;
+
+            var polyline = null;
+
+            var pct_battery_per_km = 5;
+            var cost_per_km = 5;
+            var distance_to_target = 0;
+            var battery_after = null;
+            var cost = 0;
+
             var markers = [];
             var dict = {};
+
 
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
@@ -128,18 +145,45 @@
 
             function onMapClick(e) 
             {
-                //alert("You clicked the map at " + e.latlng);
-                if(popup_marker != null)
+                if(selected_scooter != null)
                 {
-                    map.removeLayer(popup_marker);
-                };
-                popup_marker = L.marker(e.latlng).addTo(map);
+                    //alert("You clicked the map at " + e.latlng);
+                    if(popup_marker != null)
+                    {
+                        map.removeLayer(popup_marker);
+                    };
+                    popup_marker = L.marker(e.latlng).addTo(map);
+                    target_latlong = e.latlng;
+                    //alert([target_latlong.lat, target_latlong.lng], [selected_scooter._latlng.lat, selected_scooter._latlng.lng]);//, selected_scooter.latlng.lat]);
+                    //addTargetPath([53.55, 10.12],[53.55, 10.22]);
+                    if(polyline != null)
+                    {
+                        map.removeLayer(polyline);
+                    }
+                    addTargetPath([target_latlong.lat, target_latlong.lng], [selected_scooter._latlng.lat, selected_scooter._latlng.lng]);
+                    distance_to_target = Number((selected_scooter._latlng.distanceTo(e.latlng) / 1000).toFixed(1));
+                    cost = calcCost();
+                    battery_after = calcBattery();
+                    if(popup_marker != null) 
+                    {
+                        setTextBox();
+                    }
+                }
+            }
+            function calcCost()
+            {
+                return Number((distance_to_target*cost_per_km).toFixed(2));
+            }
+            function calcBattery()
+            {
+                return Number((selected_scooter_battery-(distance_to_target*pct_battery_per_km)).toFixed(2));
             }
             function selectScooter(scooterMarker) 
             {
                 selected_scooter = scooterMarker;
                 selected_scooter_id = scooterMarker['_testID'];
                 selected_scooter_battery = scooterMarker['_testBattery'];
+                selected_scooter_latlong = selected_scooter.latlng;
             }
             function addScooterMarker(poslat, poslong, id, battery)
             {
@@ -154,16 +198,39 @@
                 markers[markers.length-1]._testBattery = battery;
                 dict[markers.length-1] = id;
             }
+            function addTargetPath(latlngs1, latlngs2)
+            {
+                var latlngs = [
+                    latlngs1,
+                    latlngs2
+                ];
+
+                polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);
+            }
             function setTextBox()
             {
-                //document.getElementById("tb_scooterid").textContent = `Selected Scooter: ${selected_scooter_id}`;
-                //document.getElementById("tb_batterystart").textContent = `Remaining Battery: ${selected_scooter_battery}`;
-                //document.getElementById("tb_distance").textContent = "";
-                //document.getElementById("tb_price").textContent = "";
-                //document.getElementById("tb_batteryleft").textContent = "";
+                document.getElementById("_scooterid").textContent = `Selected Scooter = ${selected_scooter_id}`;
+                document.getElementById("_scooterbattery").textContent = `Remaining Battery = ${selected_scooter_battery}%`;
+                document.getElementById("_targetdist").textContent = `Distance = ${distance_to_target.toString()}km`;
+                document.getElementById("_cost").textContent = `Cost = ${cost}€`;
+                document.getElementById("_batteryafter").textContent = `Battery after = ${battery_after}%`;
+                document.getElementById("_message").textContent = "";
+
+                var button =document.getElementById("rent_button");
+                button.textContent = "Rent now!";
+                button.classList.add("btn-primary");
+                button.classList.remove("btn-danger");
+
+                if(battery_after <= 1)
+                {
+                    button.textContent = "Too low battery!";
+                    button.classList.remove("btn-primary");
+                    button.classList.add("btn-danger");
+                }
             }
 
             map.on('click', onMapClick);
+            //addTargetPath([53.55, 10.02], [53.55, 10.12])
             addScooterMarker(53.55, 10.02, 12, 53);
             addScooterMarker(53.55, 10.04, 156, 99);
             addScooterMarker(53.55, 10.06, 234, 12);
@@ -171,7 +238,9 @@
             var fgroup = L.featureGroup(markers)
                         .on('click', function(e){
                             selectScooter(e.sourceTarget);
-                            setTextBox();
+                            //alert(e.sourceTarget._latlng);
+                            //alert(Object.keys(e.sourceTarget));
+                            //setTextBox();
                             //document.getElementById("Scooter_ID").textContent = "Selected Scooter="+selected_scooter_id;
                         })
                         .addTo(map);
