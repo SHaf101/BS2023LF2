@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100vh; /* Set the body height to 100% of the viewport height */
+                display: flex;
+                flex-direction: column;
+                background-color: #333333;
+            }         
+            main {
+                flex: 1; /* Allow the main content to expand and fill the remaining height */
+                padding: 20px;
+                background-color: #333333;
+            }
+            .dark-bg
+            {
+                background-color: #333333;
+                color: white;
+            }
+            .darker-bg
+            {
+                background-color: #222222;
+                color: white;
+            }
+            .values-container
+            {
+                display: flex;
+                flex-direction: column;
+                height: 65%;
+            }
+            .values
+            {
+                flex: 1;
+            }
+            .leaflet-container 
+            {
+                cursor: crosshair !important;
+            }
+            #map
+            {
+                height: 70vh;
+                flex: 1;
+            }
+            @media (max-height: 550px)
+            {
+                .navbar
+                {
+                    display: none !important;
+                    /*transform: translateY(-100%);*/
+                }
+            }
+        </style>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+            integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+            crossorigin=""/>
+        <title>Scootek Data Provider</title>
+    </head>
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-dark darker-bg", id="nbar">
+            <div class="container">
+                <a class="navbar-brand" href="#">Scootek</a>
+            </div>
+        </nav>
+        
+        <main>
+            <!-- Main content -->
+            <div class="container dark-bg">
+                <div class="row">
+                    <div class="col">
+                        <div class="values-container">
+                            <div class="row values">
+                                <i id="_scooterid">Selected Scooter = 253</i>
+                            </div>
+                            <div class="row values">
+                                <i id="_scooterbattery">Remaining Battery = 100%</i>
+                            </div>
+                            <div class="row values">
+                                <i id="_targetdist">Distance = 12.3km</i>
+                            </div>
+                            <div class="row values">
+                                <i id="_batteryremaining">Battery after = 75%</i>
+                            </div>
+                            <div class="row values">
+                                <i id="_cost">Cost= 22.25€</i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-7">
+
+                        <div id="map"></div>
+
+                    </div>
+                </div>
+                <div class="row mt-3">
+                        <button type="button", class="btn btn-light h-25">Rent now!</button>
+                </div>
+            </div>
+        </main>
+    
+        <footer class="darker-bg">
+            <!-- Footer content -->
+            <div class="container text-center">
+                <span>&copy; 2023 Scootek GmbH. All rights reserved.</span>
+            </div>
+        </footer>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+        <script>
+            var map = L.map('map').setView([53.55, 10.0], 13);
+            var popup_marker = null;
+            var selected_scooter = null;
+            var selected_scooter_id = null;
+            var selected_scooter_battery = null;
+            var markers = [];
+            var dict = {};
+
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            function onMapClick(e) 
+            {
+                //alert("You clicked the map at " + e.latlng);
+                if(popup_marker != null)
+                {
+                    map.removeLayer(popup_marker);
+                };
+                popup_marker = L.marker(e.latlng).addTo(map);
+            }
+            function selectScooter(scooterMarker) 
+            {
+                selected_scooter = scooterMarker;
+                selected_scooter_id = scooterMarker['_testID'];
+                selected_scooter_battery = scooterMarker['_testBattery'];
+            }
+            function addScooterMarker(poslat, poslong, id, battery)
+            {
+                markers.push(
+                    L.marker([poslat, poslong])
+                        .bindPopup(
+                            L.popup({"autoClose": false, "closeOnClick": null})
+                            .setContent(`<b>Scooter #${id}</b><br>Battery: ${battery}%`)
+                        )
+                )
+                markers[markers.length-1]._testID = id;
+                markers[markers.length-1]._testBattery = battery;
+                dict[markers.length-1] = id;
+            }
+            function setTextBox()
+            {
+                //document.getElementById("tb_scooterid").textContent = `Selected Scooter: ${selected_scooter_id}`;
+                //document.getElementById("tb_batterystart").textContent = `Remaining Battery: ${selected_scooter_battery}`;
+                //document.getElementById("tb_distance").textContent = "";
+                //document.getElementById("tb_price").textContent = "";
+                //document.getElementById("tb_batteryleft").textContent = "";
+            }
+
+            map.on('click', onMapClick);
+            addScooterMarker(53.55, 10.02, 12, 53);
+            addScooterMarker(53.55, 10.04, 156, 99);
+            addScooterMarker(53.55, 10.06, 234, 12);
+
+            var fgroup = L.featureGroup(markers)
+                        .on('click', function(e){
+                            selectScooter(e.sourceTarget);
+                            //alert(selected_scooter_id);
+                            setTextBox();
+                            //document.getElementById("Scooter_ID").textContent = "Selected Scooter="+selected_scooter_id;
+                        })
+                        .addTo(map);
+
+        </script>
+    </body>
+</html>
