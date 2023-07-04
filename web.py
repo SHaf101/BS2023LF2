@@ -14,7 +14,7 @@ conn = mysql.connect()
 cursor =conn.cursor()
 
 cursor.execute("SELECT poslat, poslon, position.id, remaining_battery from position LEFT JOIN battery ON position.id = battery.id LEFT JOIN model ON battery.id = model.id")
-data = cursor.fetchone()
+data = cursor.fetchone() # Data scheint das ergebnis zu seihen wenn das ergebnis nicht befriedigend ist vlt fetchall ausprobieren.
 
 @app.route("/")
 def home():
