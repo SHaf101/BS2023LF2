@@ -13,7 +13,7 @@ mysql.init_app(app)
 conn = mysql.connect()
 cursor =conn.cursor()
 
-cursor.execute("SELECT position.id, poslat, poslon, remaining_battery, type from position LEFT JOIN battery ON position.id = battery.id LEFT JOIN model ON battery.id = model.id")
+cursor.execute("SELECT poslat, poslon, position.id, remaining_battery from position LEFT JOIN battery ON position.id = battery.id LEFT JOIN model ON battery.id = model.id")
 data = cursor.fetchone()
 
 @app.route("/")
