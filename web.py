@@ -16,6 +16,9 @@ cursor =conn.cursor()
 cursor.execute("SELECT poslat, poslon, position.id, remaining_battery from position LEFT JOIN battery ON position.id = battery.id LEFT JOIN model ON battery.id = model.id")
 data = cursor.fetchone() # Data scheint das ergebnis zu seihen wenn das ergebnis nicht befriedigend ist vlt fetchall ausprobieren.
 
+for x in data:
+	print(x)
+
 @app.route("/")
 def home():
 	return send_from_directory("html", "webapp.html")
