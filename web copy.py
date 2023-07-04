@@ -21,6 +21,8 @@ data = cursor.fetchall()
 def home():
 	return render_template("webapp.html", len = len(data), data = data)
 
+	app.run(use_reloader = True, debug = True)
+
 
 if __name__ == "__main__":
 	app.run()
