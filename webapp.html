@@ -231,9 +231,12 @@
 
             map.on('click', onMapClick);
             //addTargetPath([53.55, 10.02], [53.55, 10.12])
-            addScooterMarker(53.55, 10.02, 12, 53);
-            addScooterMarker(53.55, 10.04, 156, 99);
-            addScooterMarker(53.55, 10.06, 234, 12);
+            //addScooterMarker('53.55', '10.02', 12, 53);
+            //addScooterMarker(53.55, 10.04, 156, 99);
+            //addScooterMarker(53.55, 10.06, 234, 12);
+            {% for n in my_list %}
+            addScooterMarker{{n}};
+            {% endfor %}
 
             var fgroup = L.featureGroup(markers)
                         .on('click', function(e){
