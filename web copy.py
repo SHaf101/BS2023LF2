@@ -1,4 +1,5 @@
 from flask import Flask
+from flask import render_template
 from flask import send_from_directory
 from flaskext.mysql import MySQL
 
@@ -18,7 +19,9 @@ data = cursor.fetchall()
 
 @app.route("/")
 def home():
-	return send_from_directory("html", "webapp.html")
+	return render_template("webapp.html", my_string=data, my_list=[0,1,2,3,4,5])
+
+	app.run(use_reloader = True, debug = True)
 
 
 if __name__ == "__main__":
