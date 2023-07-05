@@ -19,7 +19,7 @@ data = cursor.fetchall()
 
 @app.route("/")
 def home():
-	return render_template("webapp.html", len = len(data), data = data)
+	return render_template("webapp.html", my_string=data, my_list=[0,1,2,3,4,5])
 
 	app.run(use_reloader = True, debug = True)
 
